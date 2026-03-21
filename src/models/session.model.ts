@@ -26,7 +26,7 @@ const SessionSchema = new Schema<ISession>(
 
 // ─── INDEXES ──────────────────────────────────────────────────────────────────
 SessionSchema.index({ userId: 1 });
-SessionSchema.index({ sessionId: 1 });
+// sessionId already has unique:true on the field definition above — no need to duplicate
 
 // TTL (Time To Live) index — MongoDB automatically deletes a session document
 // once its expiresAt date has passed. No cron job or manual cleanup needed.

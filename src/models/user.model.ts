@@ -126,7 +126,8 @@ const UserSchema = new Schema<IUser>(
 // ─── INDEXES ──────────────────────────────────────────────────────────────────
 // Indexes make queries faster by telling MongoDB which fields to pre-sort.
 // Without indexes, MongoDB scans every document in the collection on each query.
-UserSchema.index({ email: 1 });     // fast lookup by email (used on every login)
+// email already has unique:true on the field definition above — that creates an index automatically
+// no need to duplicate it here
 UserSchema.index({ role: 1 });      // fast filtering by role (used in admin queries)
 UserSchema.index({ adminRole: 1 }); // fast lookup of specific admin roles
 UserSchema.index({ status: 1 });    // fast filtering by status (used in admin queries)

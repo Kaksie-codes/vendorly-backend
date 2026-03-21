@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler.middleware";
+import authRoutes from "./routes/auth.route";
 
 // Create the Express application instance
 // This "app" object is what we attach middleware and routes to
@@ -28,9 +29,7 @@ app.get("/health", (_req, res) => {
 });
 
 // ─── ROUTES ───────────────────────────────────────────────────────────────────
-// We'll register all our feature routes here later, e.g.:
-// app.use("/api/auth", authRoutes);
-// app.use("/api/products", productRoutes);
+app.use("/api/auth", authRoutes);
 
 // ─── GLOBAL ERROR HANDLER ─────────────────────────────────────────────────────
 // Must be registered LAST — after all routes.
