@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler.middleware";
 import authRoutes from "./routes/auth.route";
+import "./config/passport"; // registers all OAuth strategies with passport
+import passport from "passport";
 
 // Create the Express application instance
 // This "app" object is what we attach middleware and routes to
@@ -18,6 +20,10 @@ app.use(cors());
 // Tells Express to parse incoming JSON request bodies.
 // Without this, req.body would always be undefined when the frontend sends JSON.
 app.use(express.json());
+
+// Initializes passport but does NOT use sessions — we use JWTs instead.
+// This must come after express.json() so passport can read req.body if needed.
+app.use(passport.initialize());
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 // A simple route to confirm the server is running.

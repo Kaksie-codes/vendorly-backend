@@ -4,14 +4,7 @@ import { User } from "../models/user.model";
 import { ApiError } from "../utils/apiError";
 import { JwtPayload } from "../types/auth.types";
 
-// Extend Express's Request type so TypeScript knows req.user exists
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
+// passport already extends Express.Request with req.user — no need to re-declare it here
 
 // ─── PROTECT ──────────────────────────────────────────────────────────────────
 // Attach this middleware to any route that requires the user to be logged in.

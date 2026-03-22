@@ -19,9 +19,11 @@ interface IAddress {
 
 export interface IUser extends Document {
   firstName: string;
-  lastName: string;
+  lastName: string;  // empty string for OAuth users with no family name
   email: string;
-  password: string;
+  password?: string;         // undefined for OAuth users — they never set a password
+  authProvider: "local" | "google" | "github" | "facebook" | "twitter";
+  providerId?: string;       // the user's ID from the OAuth provider
   phone?: string;
   avatar?: string;                          // S3 URL
   role: "buyer" | "vendor" | "admin";
@@ -69,13 +71,26 @@ const AddressSchema = new Schema<IAddress>(
 const UserSchema = new Schema<IUser>(
   {
     firstName: { type: String, required: true, trim: true },
-    lastName:  { type: String, required: true, trim: true },
+    lastName:  { type: String, required: false, trim: true, default: "" },
     email:     { type: String, required: true, unique: true, lowercase: true, trim: true },
 
     // select: false means this field is NEVER returned in queries by default.
     // To get the password you must explicitly write .select("+password").
     // This prevents accidentally exposing hashed passwords in API responses.
-    password:  { type: String, required: true, select: false },
+    // Not required — OAuth users (Google, GitHub, etc.) don't have a password.
+    password: { type: String, select: false },
+
+    // How the user created their account. Defaults to "local" (email + password).
+    // OAuth users get the provider name set here on creation.
+    authProvider: {
+      type:    String,
+      enum:    ["local", "google", "github", "facebook", "twitter"],
+      default: "local",
+    },
+
+    // The user's ID from the OAuth provider (e.g. Google's "sub" field).
+    // select: false — not sensitive, but no need to expose it in API responses.
+    providerId: { type: String, select: false },
 
     phone:  { type: String },
     avatar: { type: String },
@@ -128,9 +143,10 @@ const UserSchema = new Schema<IUser>(
 // Without indexes, MongoDB scans every document in the collection on each query.
 // email already has unique:true on the field definition above — that creates an index automatically
 // no need to duplicate it here
-UserSchema.index({ role: 1 });      // fast filtering by role (used in admin queries)
-UserSchema.index({ adminRole: 1 }); // fast lookup of specific admin roles
-UserSchema.index({ status: 1 });    // fast filtering by status (used in admin queries)
+UserSchema.index({ role: 1 });                       // fast filtering by role (used in admin queries)
+UserSchema.index({ adminRole: 1 });                  // fast lookup of specific admin roles
+UserSchema.index({ status: 1 });                     // fast filtering by status (used in admin queries)
+UserSchema.index({ authProvider: 1, providerId: 1 }); // fast OAuth login lookup
 
 // ─── MODEL ────────────────────────────────────────────────────────────────────
 // mongoose.model() creates the model and maps it to the "users" collection in MongoDB.
