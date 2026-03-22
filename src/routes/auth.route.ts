@@ -40,13 +40,6 @@ router.get("/google/callback", oauthCallbackHandler("google"));
 router.get("/github",          passport.authenticate("github",   { session: false, scope: ["user:email"] }));
 router.get("/github/callback", oauthCallbackHandler("github"));
 
-// Facebook
-router.get("/facebook",          passport.authenticate("facebook", { session: false, scope: ["email"] }));
-router.get("/facebook/callback", oauthCallbackHandler("facebook"));
-
-// Twitter / X
-router.get("/twitter",          passport.authenticate("twitter",  { session: false }));
-router.get("/twitter/callback", oauthCallbackHandler("twitter"));
 
 // ─── PROTECTED ROUTES ─────────────────────────────────────────────────────────
 // User must be logged in (protect middleware runs first)

@@ -1,10 +1,8 @@
 import passport from "passport";
-import { Strategy as GoogleStrategy }   from "passport-google-oauth20";
-import { Strategy as GitHubStrategy }   from "passport-github2";
-import { Strategy as FacebookStrategy } from "passport-facebook";
-import { Strategy as TwitterStrategy }  from "passport-twitter";
-import { oauthLogin }                   from "../services/auth.service";
-import { ApiError }                     from "../utils/apiError";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as GitHubStrategy } from "passport-github2";
+import { oauthLogin }                 from "../services/auth.service";
+import { ApiError }                   from "../utils/apiError";
 
 // ─── HOW THIS FILE WORKS ──────────────────────────────────────────────────────
 //
@@ -93,84 +91,6 @@ passport.use(
         done(null, user);
       } catch (err) {
         if (err instanceof ApiError) return done(null, false, { message: err.message });
-        done(err as Error);
-      }
-    }
-  )
-);
-
-// ─── FACEBOOK ─────────────────────────────────────────────────────────────────
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID:     process.env.FACEBOOK_APP_ID!,
-      clientSecret: process.env.FACEBOOK_APP_SECRET!,
-      callbackURL:  `${process.env.API_URL}/api/auth/facebook/callback`,
-      // Ask Facebook to include email and profile picture in the response
-      profileFields: ["id", "emails", "name", "picture"],
-    },
-    async (_accessToken, _refreshToken, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          return done(null, false, { message: "Facebook did not share your email address. Please check your Facebook privacy settings." });
-        }
-
-        const user = await oauthLogin({
-          provider:   "facebook",
-          providerId: profile.id,
-          email,
-          firstName:  profile.name?.givenName  || profile.displayName || "User",
-          lastName:   profile.name?.familyName || "",
-          avatar:     profile.photos?.[0]?.value,
-        });
-
-        done(null, user);
-      } catch (err) {
-        if (err instanceof ApiError) return done(null, false, { message: err.message });
-        done(err as Error);
-      }
-    }
-  )
-);
-
-// ─── TWITTER / X ──────────────────────────────────────────────────────────────
-// Note: Getting the user's email from Twitter requires your app to have
-// "Elevated" access in the Twitter Developer Portal. Without it, profile.emails
-// will be empty and we redirect the user to use a different sign-in method.
-passport.use(
-  new TwitterStrategy(
-    {
-      consumerKey:    process.env.TWITTER_CLIENT_ID!,
-      consumerSecret: process.env.TWITTER_CLIENT_SECRET!,
-      callbackURL:    `${process.env.API_URL}/api/auth/twitter/callback`,
-      // includeEmail: true requires Elevated access in the Twitter Developer Portal
-      includeEmail:   true,
-    },
-    async (_token, _tokenSecret, profile, done) => {
-      try {
-        const email = profile.emails?.[0]?.value;
-        if (!email) {
-          // @types/passport-twitter types done as 2-arg only — cast to use the info arg
-          return (done as (err: any, user?: any, info?: any) => void)(null, false, { message: "Twitter did not share your email address. Your app may need Elevated access in the Twitter Developer Portal, or the user may not have a verified email on their account." });
-        }
-
-        const nameParts = (profile.displayName || "").split(" ");
-        const firstName = nameParts[0] || profile.username || "User";
-        const lastName  = nameParts.slice(1).join(" ") || "";
-
-        const user = await oauthLogin({
-          provider:   "twitter",
-          providerId: profile.id,
-          email,
-          firstName,
-          lastName,
-          avatar: profile.photos?.[0]?.value,
-        });
-
-        done(null, user);
-      } catch (err) {
-        if (err instanceof ApiError) return (done as (err: any, user?: any, info?: any) => void)(null, false, { message: err.message });
         done(err as Error);
       }
     }
